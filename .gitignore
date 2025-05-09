@@ -1,6 +1,11 @@
 # Node modules
 node_modules/
 
+# Frontend deps and build
+/frontend/node_modules/
+/frontend/dist/
+/frontend/.vite/
+
 # Logs
 logs/
 *.log
