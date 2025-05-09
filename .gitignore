@@ -45,3 +45,6 @@ build/
 
 # Ingore the large AI index
 backend/model/food101.onnx
+
+# ignore uploads folder
+/uploads
