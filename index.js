@@ -2,7 +2,11 @@ import express from 'express';
 import cors from 'cors';
 import fs from 'fs/promises';
 import path from 'path';
-import predictRoute from './routes/predict.js';
+import predictRoute from './backend/routes/predict.js';
+import { ensureOnnxModel } from './backend/scripts/prepare_model.js';
+
+// Call before starting server
+await ensureOnnxModel();
 
 const app = express();
 const PORT = 3001; 

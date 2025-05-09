@@ -64,7 +64,8 @@ export async function predictImage(filePath) {
     const inputTensor = new ort.Tensor('float32', floatArray, [1, 3, 224, 224]);
 
     // Load model
-    const session = await ort.InferenceSession.create('./model/food101.onnx');
+    const modelPath = path.join(process.cwd(), 'backend', 'model', 'food101.onnx');
+    const session = await ort.InferenceSession.create(modelPath);
     const output = await session.run({ input: inputTensor });
 
     // Extract prediction

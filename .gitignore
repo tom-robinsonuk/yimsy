@@ -42,3 +42,6 @@ build/
 
 # Express-specific
 *.tsbuildinfo
+
+# Ingore the large AI index
+backend/model/food101.onnx
