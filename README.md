@@ -36,19 +36,29 @@ Yimsy is an AI-powered API that classifies food photos into 101 categories using
     "label": "pizza",
     "confidence": 0.945
   }
-}```
+}
+```
+
+---
 
 ## 🚀 Running Locally
 cd backend
 npm install
 node index.js
 
+---
+
 ## 🧹 Dev Notes
 - Automatically clears /uploads folder on startup
 - Model input shape: [1, 3, 224, 224]
 - Normalised with mean=0.5, std=0.5 per channel
 
+---
+
 ## 📦 Todo / Roadmap
 - Add confidence thresholds for rejecting non-food inputs
 - Implement feedback system (“Is this correct?”)
 - Frontend for image upload and results display
+
+---
+
