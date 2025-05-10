@@ -5,32 +5,6 @@
       <v-col cols="12" md="6">
         <v-card class="pa-4" elevation="2">
           <h2 class="text-h6 font-weight-bold mb-4 text-center">Log Meal</h2>
-
-          <div v-if="awaitingUserLabel" class="mt-4">
-            <h3 class="text-subtitle-1 font-weight-medium">We detected: {{ prediction.label }}</h3>
-            <p>Is this correct?</p>
-            <v-btn color="primary" @click="confirmLabel(true)">Yes</v-btn>
-            <v-btn color="error" class="ml-2" @click="confirmLabel(false)">No</v-btn>
-          </div>
-
-          <!-- If user says NO, show input -->
-          <div v-if="customLabelPrompt" class="mt-2">
-            <v-text-field v-model="customLabel" label="Enter correct label" />
-            <v-btn color="primary" class="mt-2" @click="submitCustomLabel" :disabled="loading">
-              Continue
-            </v-btn>
-          </div>
-
-          <!-- GPT Ingredients Confirm Section -->
-          <div v-if="gptIngredients.length" class="mt-4">
-            <h3 class="text-subtitle-1 font-weight-medium">We detected the following ingredients:</h3>
-            <v-list>
-              <v-list-item v-for="(item, index) in gptIngredients" :key="index">
-                <v-list-item-title>{{ item }}</v-list-item-title>
-              </v-list-item>
-            </v-list>
-          </div>
-
           <!-- Grid of icon buttons -->
           <v-row dense>
             <v-col cols="6">
@@ -66,7 +40,44 @@
               </v-btn>
             </v-col>
           </v-row>
+          <v-card class="mt-4 pa-3" outlined shaped>
+            <div v-if="awaitingUserLabel">
+              <h3 class="text-subtitle-1 font-weight-medium">We detected: {{ prediction.label }}</h3>
+              <p>Is this correct?</p>
+              <v-btn color="primary" @click="confirmLabel(true)">Yes</v-btn>
+              <v-btn color="error" class="ml-2" @click="confirmLabel(false)">No</v-btn>
+            </div>
 
+            <div v-if="customLabelPrompt" class="mt-2">
+              <v-text-field v-model="customLabel" label="Enter correct label" />
+              <v-btn color="primary" class="mt-2" @click="submitCustomLabel" :disabled="loading">Continue</v-btn>
+            </div>
+
+            <div v-if="gptIngredients.length" class="mt-4">
+              <h3 class="text-subtitle-1 font-weight-medium">Select the ingredients you actually ate:</h3>
+              <v-list>
+                <v-list-item
+                  v-for="(item, index) in gptIngredients"
+                  :key="index"
+                >
+                  <v-checkbox
+                    v-model="gptSelected"
+                    :label="item"
+                    :value="item"
+                    hide-details
+                    density="compact"
+                    class="pl-2"
+                  />
+                </v-list-item>
+              </v-list>
+              <v-btn class="mt-2" color="primary" @click="updateSelectedIngredients">Update Selected Ingredients</v-btn>
+            </div>
+          </v-card>
+          <v-row justify="center" v-if="loading">
+            <v-col cols="auto">
+              <v-progress-circular indeterminate color="primary" size="36" />
+            </v-col>
+          </v-row>
           <v-divider class="my-4"></v-divider>
 
           <!-- Meal summary -->
@@ -112,8 +123,16 @@ const customLabelPrompt = ref(false);
 const customLabel = ref('');
 const loading = ref(false);
 
+const gptSelected = ref([]); // bound to checkboxes
+
 const triggerFilePicker = () => {
   fileInput.value?.click();
+};
+
+const updateSelectedIngredients = () => {
+    gptIngredients.value = gptIngredients.value.filter(item =>
+    gptSelected.value.includes(item)
+  );
 };
 
 const confirmLabel = async (isCorrect) => {
@@ -158,6 +177,7 @@ const runGptIngredientDetection = async (label) => {
     }
 
     gptIngredients.value = Array.isArray(parsed) ? parsed : [];
+    gptSelected.value = [...gptIngredients.value]; // ✅ default all selected
   } catch (err) {
     console.error('GPT Ingredient fetch error:', err);
     gptIngredients.value = [];
