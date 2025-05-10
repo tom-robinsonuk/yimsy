@@ -46,13 +46,21 @@
   
             <!-- Meal summary -->
             <v-list density="compact">
-                <v-list-item v-for="(item, index) in mealItems" :key="index">
-                    <v-list-item-title>{{ item.name }} - {{ item.grams }}g</v-list-item-title>
+                <v-list-item
+                    v-for="(item, index) in mealItems"
+                    :key="index"
+                    class="pb-2"
+                >
+                    <v-list-item-title class="font-weight-bold">{{ item.name }} - {{ item.grams }}g</v-list-item-title>
+                    <v-list-item-subtitle>
+                    Protein: {{ item.protein }}g | Carbs: {{ item.carbs }}g | Fats: {{ item.fats }}g | Calories: {{ item.kcal }} kcal
+                    </v-list-item-subtitle>
                 </v-list-item>
-            </v-list>
+                </v-list>
 
-  
-            <v-btn block color="primary" class="mt-4">Add to Daily Log</v-btn>
+                <v-btn block color="primary" class="mt-4" @click="addToDailyLog">
+                    Add to Daily Log
+                </v-btn>
           </v-card>
         </v-col>
       </v-row>
@@ -60,7 +68,9 @@
   </template>
   
   <script setup>
-  import { ref, reactive } from 'vue';
+  import { ref } from 'vue';
+  import { useMealStore } from '../stores/useMealStore.js';
+  import { useRouter } from 'vue-router';
   import axios from 'axios';
 
   const prediction = ref(null);
@@ -68,12 +78,11 @@
   // For file input reference
   const fileInput = ref(null);
   
-  // Reactive array for meal items
-  const mealItems = reactive([
-    { name: 'Salad', grams: 47 },
-    { name: 'Salmon', grams: 19 }
-  ]);
-  
+  // Store the meal items
+  const mealStore = useMealStore();
+  const mealItems = mealStore.mealItems;
+  const router = useRouter();
+
   // Open file picker when button clicked
   const triggerFilePicker = () => {
     fileInput.value?.click();
@@ -94,7 +103,14 @@
         const label = response.data.prediction.label;
         const grams = Math.floor(response.data.prediction.confidence * 100); // Random data till nutritional values are added, 
 
-        mealItems.push({ name: label, grams });
+        // Mock macros (replace with real data later)
+        const protein = Math.round(grams * 0.2);
+        const carbs = Math.round(grams * 0.5);
+        const fats = Math.round(grams * 0.3);
+        const kcal = Math.round(protein * 4 + carbs * 4 + fats * 9);
+
+
+        mealItems.push({ name: label, grams, protein, carbs, fats, kcal });
         prediction.value = response.data.prediction;
 
       } else {
@@ -105,6 +121,19 @@
       alert('Something went wrong during upload.');
     }
   };
+
+  const addToDailyLog = () => {
+  // Push all local meal items to the store
+  mealItems.forEach(item => {
+    mealStore.addMealItem(item);
+  });
+
+  // Clear local list [Optional]
+  //mealItems.splice(0);
+
+  //Redirect to home
+  router.push('/');
+};
   </script>
   
   

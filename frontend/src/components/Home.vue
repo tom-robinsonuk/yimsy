@@ -12,20 +12,16 @@
       </v-row>
     </v-container>
     <v-card class="mx-auto my-4 pa-4" max-width="320" elevation="2">
-        <v-card-title class="text-h6">Total Intake</v-card-title>
-        <v-card-text>
-            <div><strong>Total:</strong> 58g – 22 kcal</div>
-            <div class="mt-2">
-            <strong>Macros:</strong>
-            <ul style="margin: 0; padding-left: 1rem;">
-                <li>55g Protein</li>
-                <li>47g Carbs</li>
-                <li>32g Fats</li>
-            </ul>
-            </div>
-        </v-card-text>
+        <v-card class="pa-4 mb-4" elevation="2">
+            <div class="text-h6 font-weight-bold mb-2 text-center">Total Intake</div>
+            <div class="text-subtitle-1">Grams: {{ totalSummary.grams }}g</div>
+            <div class="text-subtitle-1">Protein: {{ totalSummary.protein }}g</div>
+            <div class="text-subtitle-1">Carbs: {{ totalSummary.carbs }}g</div>
+            <div class="text-subtitle-1">Fats: {{ totalSummary.fats }}g</div>
+            <div class="text-subtitle-1">Calories: {{ totalSummary.kcal }} kcal</div>
+        </v-card>
     </v-card>
-    <!-- AI Suggestion -->
+    <!-- AI Suggestion tbc -->
     <v-row justify="center" class="mt-6">
     <v-col cols="12" md="6">
         <v-card class="pa-4 elevation-2">
@@ -48,29 +44,52 @@
   </template>
   
   <script setup>
-  import MacroRing from './MacroRing.vue';
-  
-  const chartData = {
+    import MacroRing from './MacroRing.vue';
+    import { useMealStore } from '../stores/useMealStore.js';
+    import { computed } from 'vue';
+
+    const mealStore = useMealStore();
+
+    const chartData = computed(() => ({
     labels: ['Protein', 'Carbs', 'Fats'],
     datasets: [
-      {
-        data: [55, 47, 32],
+    {
+        data: [
+        totalSummary.value.protein,
+        totalSummary.value.carbs,
+        totalSummary.value.fats
+        ],
         backgroundColor: ['#4caf50', '#2196f3', '#ff9800'],
         borderWidth: 1
-      }
-    ]
-  };
-  
-  const chartOptions = {
-    cutout: '70%',
-    plugins: {
-      legend: {
-        display: false
-      },
-      tooltip: {
-        enabled: false
-      }
     }
-  };
+    ]
+    }));
+  
+    const chartOptions = {
+        cutout: '70%',
+        plugins: {
+        legend: {
+            display: false
+        },
+        tooltip: {
+            enabled: false
+        }
+        }
+    };
+
+    const totalSummary = computed(() => {
+        return mealStore.mealItems.reduce(
+            (acc, item) => {
+                acc.grams += item.grams;
+                acc.protein += item.protein;
+                acc.carbs += item.carbs;
+                acc.fats += item.fats;
+                acc.kcal += item.kcal;
+                return acc;
+            },
+            { grams: 0, protein: 0, carbs: 0, fats: 0, kcal: 0 }
+        );
+    });
+
   </script>
   
