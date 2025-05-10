@@ -40,8 +40,8 @@
     <!-- Log New Meal Button -->
     <v-row justify="center" class="mt-4 mb-10">
     <v-col cols="auto">
-        <v-btn color="primary" large>
-        Log New Meal
+        <v-btn block color="primary" class="mt-4" @click="$router.push('/log')">
+            Log New Meal
         </v-btn>
     </v-col>
     </v-row>

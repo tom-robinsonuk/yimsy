@@ -1,9 +1,3 @@
 <template>
-  <v-app>
-    <Home />
-  </v-app>
+  <router-view />
 </template>
-
-<script setup>
-import Home from './components/LogMeal.vue'
-</script>
