@@ -19,11 +19,12 @@ router.post('/', upload.single('image'), async (req, res) => {
 
         const response = await openai.chat.completions.create({
             model: 'gpt-4o',
+            temperature: 0, // Makes responses more deterministic (less creative)
             messages: [
                 {
                     role: 'user',
                     content: [
-                        { type: 'text', text: `This is a photo of a meal (possibly ${label}). What individual ingredients do you detect? Response with a clean array like: ["Chicken", "Carrots", "Broccoli"]`},
+                        { type: 'text', text: `This is a photo of a meal (possibly ${label}). Please identify all visible individual ingredients. Respond as a clean JSON array: ['Chicken', 'Broccoli', 'Sauce']. Include side dishes or garnishes if visible. Only include ingredients you can clearly see. Don't guess.`},
                         {
                             type: 'image_url',
                             image_url: {
@@ -43,7 +44,7 @@ router.post('/', upload.single('image'), async (req, res) => {
         } catch {
           ingredients = [ingredients]; // fallback: wrap as array
         }
-        
+
         res.json({ success: true, ingredients });
     } catch (err) {
         console.error('GPT API error:', err.message);
