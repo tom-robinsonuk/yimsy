@@ -1,5 +1,9 @@
 <template>
-    <div style="color: black">Home</div>
+    <v-row justify="center" class="mt-8">
+        <v-col cols="auto">
+            <h1 class="text-h5 font-weight-bold text-center">Home</h1>
+        </v-col>
+    </v-row>
     <v-container>
       <v-row justify="center">
         <v-col cols="12" md="6">
