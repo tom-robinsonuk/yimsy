@@ -6,6 +6,7 @@ import 'dotenv/config';
 import predictRoute from './backend/routes/predict.js';
 import { ensureOnnxModel } from './backend/scripts/prepare_model.js';
 import analyzeImageRoute from './backend/routes/analyzeImage.js';
+import fdcSearchRoute from './backend/routes/fdcSearch.js';
 
 // Call before starting server
 await ensureOnnxModel();
@@ -17,6 +18,7 @@ app.use(cors());
 app.use(express.json());
 
 app.use('/analyze-image', analyzeImageRoute);
+app.use('/', fdcSearchRoute);
 
 // --- Cleanup temp uploads folder on start ---
 const cleanupUploads = async () => {
