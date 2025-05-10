@@ -1,33 +1,42 @@
-# YimsyAI – Food Image Classifier API
+# 🍽️ YimsyAI – Smart Food Detection with Ingredient Breakdown
 
-Yimsy is an AI-powered API that classifies food photos into 101 categories using an ONNX-exported ViT model trained on the [Food-101 dataset](https://data.vision.ee.ethz.ch/cvl/datasets_extra/food-101/). Built for nutritional analysis and health app integrations.
-
----
-
-## 🔧 How It Works
-
-- Upload a food image (JPG/PNG)
-- It’s resized, normalized, and fed into a ViT model
-- The top prediction and confidence score are returned
+Yimsy is an AI-powered meal logging system that combines Food101 classification and GPT-4o vision analysis to break down meals from images into real ingredients for future nutritional tracking.
 
 ---
 
-## 🧠 Model
+## 🚀 Features
 
-- Model: [eslamxm/vit-base-food101](https://huggingface.co/eslamxm/vit-base-food101)
-- License: [Apache 2.0](https://www.apache.org/licenses/LICENSE-2.0)
-- Converted to ONNX using `torch.onnx.export`
+- 🔍 **Food Classifier (Food-101 + ViT ONNX)**  
+  Detects the most likely food category from a photo
+
+- 🧠 **GPT-4o Ingredient Detection**  
+  After confirmation or correction, Yimsy uses GPT to identify individual ingredients from the meal image
+
+- ✅ **User Feedback Flow**  
+  Users can confirm or correct detected food before ingredient breakdown
+
+- 📊 **Frontend Meal Logging (Vue 3 + Vuetify)**  
+  Clean UI for uploading, reviewing, and adding meals to your log
 
 ---
 
-## 🛠 API Usage
+## 🧠 Model Info
 
-**POST** `/predict`
+- **Classifier Model:** [`eslamxm/vit-base-food101`](https://huggingface.co/eslamxm/vit-base-food101)  
+- **Exported To:** ONNX  
+- **Image Preprocessing:**  
+  - Resize to `224x224`  
+  - Normalize to `mean=0.5`, `std=0.5`  
+- **Ingredient Detection:** OpenAI GPT-4o (vision)
 
-- `Content-Type: multipart/form-data`
-- Key: `image` → Upload your file
+---
 
-**Example Response:**
+## 🛠 Backend API
+
+### **POST** `/predict`  
+Use Food101 model to predict food category  
+- **Body:** `multipart/form-data` with `image`
+
 ```json
 {
   "success": true,
@@ -39,26 +48,54 @@ Yimsy is an AI-powered API that classifies food photos into 101 categories using
 }
 ```
 
+### **POST** `/analyze-image`  
+Detect ingredients from image with GPT  
+- **Body:** `multipart/form-data`  
+- **Fields:**  
+  - `image` – the file  
+  - `label` – optional hint from Food101 (e.g. `"pizza"`)
+
+```json
+{
+  "success": true,
+  "ingredients": ["Cheese", "Tomato Sauce", "Dough"]
+}
+```
+
 ---
 
-## 🚀 Running Locally
-cd backend
+## 🧪 Running Locally
+
+```bash
+# From project root
 npm install
 node index.js
+```
+
+- Visit frontend at: `http://localhost:5173/`
+- Backend runs on: `http://localhost:3001/`
 
 ---
 
 ## 🧹 Dev Notes
-- Automatically clears /uploads folder on startup
-- Model input shape: [1, 3, 224, 224]
-- Normalised with mean=0.5, std=0.5 per channel
+
+- Clears `/uploads/` on every backend start
+- Uses [Multer](https://github.com/expressjs/multer) for file handling
+- Uses `openai.chat.completions.create` with GPT-4o (vision) to analyze base64 image
 
 ---
 
-## 📦 Todo / Roadmap
-- Add confidence thresholds for rejecting non-food inputs
-- Implement feedback system (“Is this correct?”)
-- Frontend for image upload and results display
+## 🧭 Roadmap
+
+- 🧮 Ingredient → Nutrition mapping using FDC/USDA  
+- 📦 Caching past results for API optimization  
+- 🔐 Add user authentication and meal history  
+- 📈 Nutrition ring UI to track macros  
+- 📢 Credit usage notifications for GPT
 
 ---
 
+## 🔒 Licensing Notice
+
+YimsyAI is a proprietary application. All rights reserved.  
+Not licensed for redistribution, resale, or open-source use.
