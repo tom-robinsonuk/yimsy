@@ -70,6 +70,18 @@
                   />
                 </v-list-item>
               </v-list>
+              <!-- Manual Add Section -->
+              <v-divider class="my-4" />
+              <div>
+                <div class="text-subtitle-2 font-weight-medium mb-2">Missing something?</div>
+                <v-text-field
+                  v-model="manualIngredient"
+                  label="Add another ingredient"
+                  density="compact"
+                  @keydown.enter="addManualIngredient"
+                />
+                <v-btn size="small" color="primary" @click="addManualIngredient">Add Ingredient</v-btn>
+              </div>
               <v-btn class="mt-2" color="primary" @click="updateSelectedIngredients">Update Selected Ingredients</v-btn>
             </div>
           </v-card>
@@ -125,8 +137,22 @@ const loading = ref(false);
 
 const gptSelected = ref([]); // bound to checkboxes
 
+const manualIngredient = ref('');
+
 const triggerFilePicker = () => {
   fileInput.value?.click();
+};
+
+const addManualIngredient = () => {
+  const item = manualIngredient.value.trim();
+  if (!item) return;
+
+  if (!gptIngredients.value.includes(item)) {
+    gptIngredients.value.push(item);
+    selectedIngredients.value.push(item);
+  }
+
+  manualIngredient.value = '';
 };
 
 const updateSelectedIngredients = () => {
