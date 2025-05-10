@@ -2,8 +2,10 @@ import express from 'express';
 import cors from 'cors';
 import fs from 'fs/promises';
 import path from 'path';
+import 'dotenv/config';
 import predictRoute from './backend/routes/predict.js';
 import { ensureOnnxModel } from './backend/scripts/prepare_model.js';
+import analyzeImageRoute from './backend/routes/analyzeImage.js';
 
 // Call before starting server
 await ensureOnnxModel();
@@ -13,6 +15,8 @@ const PORT = 3001;
 
 app.use(cors());
 app.use(express.json());
+
+app.use('/analyze-image', analyzeImageRoute);
 
 // --- Cleanup temp uploads folder on start ---
 const cleanupUploads = async () => {
