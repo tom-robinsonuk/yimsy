@@ -162,16 +162,33 @@ const triggerFilePicker = () => {
   fileInput.value?.click();
 };
 
-const addManualIngredient = () => {
+const addManualIngredient = async () => {
   const item = manualIngredient.value.trim();
   if (!item) return;
 
-  if (!gptIngredients.value.includes(item)) {
-    gptIngredients.value.push(item);
-    selectedIngredients.value.push(item);
-  }
+  const results = await tryManualBreakdown(item);
+
+  results.forEach((ingredient) => {
+    if (!gptIngredients.value.includes(ingredient)) {
+      gptIngredients.value.push(ingredient);
+      selectedIngredients.value.push(ingredient);
+    }
+  });
 
   manualIngredient.value = '';
+};
+
+
+const tryManualBreakdown = async (label) => {
+  try {
+    const res = await axios.post('http://localhost:3001/manual-check', { label });
+    if (res.data?.success && Array.isArray(res.data.ingredients)) {
+      return res.data.ingredients;
+    }
+  } catch (err) {
+    console.warn('Manual breakdown failed:', err.message);
+  }
+  return [label]; // fallback: treat as normal
 };
 
 const updateSelectedIngredients = async () => {
@@ -248,6 +265,14 @@ const runGptIngredientDetection = async (label) => {
       } catch {
         parsed = [parsed];
       }
+    }
+
+    if (
+      parsed.length === 1 &&
+      parsed[0] === '__ERROR_NO_FOOD__'
+      ) {
+        alert("We couldn’t detect any food in this photo. Try again with a clearer image.");
+        return;
     }
 
     gptIngredients.value = Array.isArray(parsed) ? parsed : [];

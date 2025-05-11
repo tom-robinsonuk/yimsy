@@ -7,6 +7,7 @@ import predictRoute from './backend/routes/predict.js';
 import { ensureOnnxModel } from './backend/scripts/prepare_model.js';
 import analyzeImageRoute from './backend/routes/analyzeImage.js';
 import fdcSearchRoute from './backend/routes/fdcSearch.js';
+import manualIngredientCheckRoute from './backend/routes/manualIngredientCheck.js';
 
 // Call before starting server
 await ensureOnnxModel();
@@ -17,7 +18,11 @@ const PORT = 3001;
 app.use(cors());
 app.use(express.json());
 
+// GPT
 app.use('/analyze-image', analyzeImageRoute);
+app.use('/manual-check', manualIngredientCheckRoute);
+
+// Database
 app.use('/', fdcSearchRoute);
 
 // --- Cleanup temp uploads folder on start ---

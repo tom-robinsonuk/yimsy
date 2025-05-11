@@ -35,8 +35,12 @@ router.post('/', upload.single('image'), async (req, res) => {
                             Avoid vague terms like 'green vegetables', 'sauce', or 'spices' — instead say what the most likely actual ingredient is.
                             
                             If a food has multiple names in American and British English, show both, like: Eggplant (Aubergine) or Cilantro (Coriander)
+
+                            If a sauce is branded (e.g. "Big Mac Sauce", "Secret Sauce"), replace it with the closest common equivalent like "Special Sauce", "Mayonnaise", or "Thousand Island Dressing" if applicable.
                             
-                            Return a JSON array of ingredient names as strings.`
+                            Return a JSON array of ingredient names as strings.
+                            
+                            if you cannot identify any food in the image, return this exact JSON: ["__ERROR_NO_FOOD__"]`
                     },
                     {
                       type: 'image_url',
