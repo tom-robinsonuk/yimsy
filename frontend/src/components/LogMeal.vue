@@ -56,15 +56,30 @@
             <div v-if="gptIngredients.length" class="mt-4">
               <h3 class="text-subtitle-1 font-weight-medium">Select the ingredients you actually ate:</h3>
               <v-list>
-                <v-list-item
-                  v-for="(ingredient, index) in gptIngredients"
-                  :key="index"
-                >
-                  <v-checkbox
-                    v-model="selectedIngredients"
-                    :label="ingredient"
-                    :value="ingredient"
-                  />
+                <v-list-item v-for="(ingredient, index) in gptIngredients" :key="index">
+                  <v-row align="center" class="d-flex">
+                    <v-col cols="10">
+                      <v-checkbox
+                        v-model="selectedIngredients"
+                        :label="editingIndex === index ? '' : ingredient"
+                        :value="ingredient"
+                      />
+                      <v-text-field
+                        v-if="editingIndex === index"
+                        v-model="editedName"
+                        label="Edit ingredient"
+                        @keydown.enter="saveIngredient(index)"
+                        @blur="saveIngredient(index)"
+                        density="compact"
+                        hide-details
+                      />
+                    </v-col>
+                    <v-col cols="2" class="text-right">
+                      <v-btn icon size="small" @click="editIngredient(index)">
+                        <v-icon size="18">mdi-pencil</v-icon>
+                      </v-btn>
+                    </v-col>
+                  </v-row>
                 </v-list-item>
               </v-list>
               <!-- Manual Add Section -->
@@ -156,7 +171,26 @@ const selectedIngredients = ref([]); // confirmed after checkboxes
 const nutritionResults = ref([]);    // final nutrition info for each
 const fetchingNutrition = ref(false);
 
+const editingIndex = ref(null);
+const editedName = ref('');
 
+const editIngredient = (index) => {
+  editingIndex.value = index;
+  editedName.value = gptIngredients.value[index];
+};
+
+const saveIngredient = (index) => {
+  if (!editedName.value.trim()) return;
+  const original = gptIngredients.value[index];
+  gptIngredients.value[index] = editedName.value.trim();
+
+  const selectedIdx = selectedIngredients.value.indexOf(original);
+  if (selectedIdx !== -1) {
+    selectedIngredients.value[selectedIdx] = editedName.value.trim();
+  }
+
+  editingIndex.value = null;
+};
 
 const triggerFilePicker = () => {
   fileInput.value?.click();

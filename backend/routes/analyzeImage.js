@@ -26,7 +26,7 @@ router.post('/', upload.single('image'), async (req, res) => {
                   content: [
                     {
                       type: 'text',
-                      text: `Look at this image of food. Based on what you see and the (possibly correct) label provided, list the specific food ingredients in this meal.
+                      text: `Look at this image of food. Based on what you see and the (possibly correct) Label: "${label}" provided, list the specific food ingredients in this meal.
               
                             Only include items that can be searched in a food nutrition database (like USDA FDC).
                             
