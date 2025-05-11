@@ -57,29 +57,33 @@
               <h3 class="text-subtitle-1 font-weight-medium">Select the ingredients you actually ate:</h3>
               <v-list>
                 <v-list-item v-for="(ingredient, index) in gptIngredients" :key="index">
-                  <v-row align="center" class="d-flex">
-                    <v-col cols="10">
-                      <v-checkbox
-                        v-model="selectedIngredients"
-                        :label="editingIndex === index ? '' : ingredient"
-                        :value="ingredient"
-                      />
-                      <v-text-field
-                        v-if="editingIndex === index"
-                        v-model="editedName"
-                        label="Edit ingredient"
-                        @keydown.enter="saveIngredient(index)"
-                        @blur="saveIngredient(index)"
-                        density="compact"
-                        hide-details
-                      />
-                    </v-col>
-                    <v-col cols="2" class="text-right">
-                      <v-btn icon size="small" @click="editIngredient(index)">
-                        <v-icon size="18">mdi-pencil</v-icon>
-                      </v-btn>
-                    </v-col>
-                  </v-row>
+                  <v-card class="pa-3 mb-2" outlined>
+                    <v-row align="center">
+                      <v-col cols="9">
+                        <v-checkbox
+                          v-model="selectedIngredients"
+                          :label="editingIndex === index ? '' : ingredient"
+                          :value="ingredient"
+                          hide-details
+                        />
+                        <v-text-field
+                          v-if="editingIndex === index"
+                          v-model="editedName"
+                          label="Edit ingredient"
+                          @keydown.enter="saveIngredient(index)"
+                          hide-details
+                          density="compact"
+                          append-inner-icon="mdi-check"
+                          @click:append-inner="saveIngredient(index)"
+                        />
+                      </v-col>
+                      <v-col cols="3" class="text-right">
+                        <v-btn icon @click="editIngredient(index)">
+                          <v-icon>mdi-pencil</v-icon>
+                        </v-btn>
+                      </v-col>
+                    </v-row>
+                  </v-card>
                 </v-list-item>
               </v-list>
               <!-- Manual Add Section -->
