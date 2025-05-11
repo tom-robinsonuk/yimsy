@@ -82,7 +82,7 @@
               <v-btn class="mt-2" color="primary" @click="updateSelectedIngredients">CONFIRM SELECTED INGREDIENTS</v-btn>
             </div>
             <div v-if="nutritionResults.length" class="mt-4">
-              <h3 class="text-subtitle-1 font-weight-medium">Nutrition Overview (per actual portion):</h3>
+              <h3 class="text-subtitle-1 font-weight-medium">Nutrition Overview (per 100g):</h3>
               <v-list>
                 <v-list-item v-for="(item, index) in nutritionResults" :key="index">
                   <v-list-item-title class="font-weight-bold">

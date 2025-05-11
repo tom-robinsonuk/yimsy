@@ -35,14 +35,26 @@ router.post('/fdc-search', async (req, res) => {
     // Extract nutrients from match
     const nutrients = match.foodNutrients || [];
 
+    //console.log('🔍 Nutrients:', nutrients.map(n => `${n.nutrientName} (${n.unitName})`));
+
     const get = (name) => {
-      const item = nutrients.find(n => n.nutrientName.toLowerCase().includes(name));
-      return item?.value ?? 0;
+    if (name === 'energy') {
+        const kcalEntry = nutrients.find(n =>
+        n.nutrientName.toLowerCase() === 'energy' &&
+        n.unitName.toLowerCase() === 'kcal'
+        );
+        return kcalEntry?.value ?? 0;
+    }
+
+    return nutrients.find(n =>
+        n.nutrientName.toLowerCase().includes(name.toLowerCase())
+    )?.value ?? 0;
     };
+
 
     const result = {
       label: match.description,
-      grams: match.servingSize || 100, // fallback
+      grams: 100, //Math.round(match.servingSize || 100), // fallback --> Hardcoded to 100g at the moment, due to FDC bug, where it gave lower than 100 for grams but 100g serving for everything else
       protein: get('protein'),
       carbs: get('carbohydrate'),
       fats: get('fat'),
