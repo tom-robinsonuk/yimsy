@@ -57,16 +57,13 @@
               <h3 class="text-subtitle-1 font-weight-medium">Select the ingredients you actually ate:</h3>
               <v-list>
                 <v-list-item
-                  v-for="(item, index) in gptIngredients"
+                  v-for="(ingredient, index) in gptIngredients"
                   :key="index"
                 >
                   <v-checkbox
-                    v-model="gptSelected"
-                    :label="item"
-                    :value="item"
-                    hide-details
-                    density="compact"
-                    class="pl-2"
+                    v-model="selectedIngredients"
+                    :label="ingredient"
+                    :value="ingredient"
                   />
                 </v-list-item>
               </v-list>
@@ -82,8 +79,25 @@
                 />
                 <v-btn size="small" color="primary" @click="addManualIngredient">Add Ingredient</v-btn>
               </div>
-              <v-btn class="mt-2" color="primary" @click="updateSelectedIngredients">Update Selected Ingredients</v-btn>
+              <v-btn class="mt-2" color="primary" @click="updateSelectedIngredients">CONFIRM SELECTED INGREDIENTS</v-btn>
             </div>
+            <div v-if="nutritionResults.length" class="mt-4">
+              <h3 class="text-subtitle-1 font-weight-medium">Nutrition Overview (per actual portion):</h3>
+              <v-list>
+                <v-list-item v-for="(item, index) in nutritionResults" :key="index">
+                  <v-list-item-title class="font-weight-bold">
+                    {{ item.label }} ({{ item.grams }}g)
+                  </v-list-item-title>
+                  <div style="white-space: normal; line-height: 1.5; font-size: 14px; padding-right: 8px;">
+                    Protein: {{ item.protein }}g |
+                    Carbs: {{ item.carbs }}g |
+                    Fats: {{ item.fats }}g |
+                    Kcal: {{ item.kcal }}
+                  </div>
+                </v-list-item>
+              </v-list>
+            </div>
+            <v-progress-circular v-if="fetchingNutrition" indeterminate color="primary" class="mt-2" />
           </v-card>
           <v-row justify="center" v-if="loading">
             <v-col cols="auto">
@@ -136,8 +150,13 @@ const customLabel = ref('');
 const loading = ref(false);
 
 const gptSelected = ref([]); // bound to checkboxes
-
 const manualIngredient = ref('');
+
+const selectedIngredients = ref([]); // confirmed after checkboxes
+const nutritionResults = ref([]);    // final nutrition info for each
+const fetchingNutrition = ref(false);
+
+
 
 const triggerFilePicker = () => {
   fileInput.value?.click();
@@ -155,10 +174,39 @@ const addManualIngredient = () => {
   manualIngredient.value = '';
 };
 
-const updateSelectedIngredients = () => {
-    gptIngredients.value = gptIngredients.value.filter(item =>
-    gptSelected.value.includes(item)
+const updateSelectedIngredients = async () => {
+  fetchingNutrition.value = true;
+  nutritionResults.value = [];
+
+  
+  // Clean up: remove any unchecked ingredients
+  selectedIngredients.value = selectedIngredients.value.filter(item =>
+    gptIngredients.value.includes(item)
   );
+
+  for (const ingredient of selectedIngredients.value) {
+    try {
+      const res = await axios.post('http://localhost:3001/fdc-search', {
+        query: ingredient
+      });
+
+      if (res.data?.success && res.data.data) {
+        const food = res.data.data;
+        nutritionResults.value.push({
+          label: ingredient,
+          grams: Number(food.grams).toFixed(1),
+          protein: Number(food.protein).toFixed(1),
+          carbs: Number(food.carbs).toFixed(1),
+          fats: Number(food.fats).toFixed(1),
+          kcal: Number(food.kcal).toFixed(0)
+        });
+      }
+    } catch (err) {
+      console.warn(`Failed to get nutrition for ${ingredient}`, err.message);
+    }
+  }
+
+  fetchingNutrition.value = false;
 };
 
 const confirmLabel = async (isCorrect) => {
@@ -203,7 +251,7 @@ const runGptIngredientDetection = async (label) => {
     }
 
     gptIngredients.value = Array.isArray(parsed) ? parsed : [];
-    gptSelected.value = [...gptIngredients.value]; // ✅ default all selected
+    selectedIngredients.value = [...gptIngredients.value];
   } catch (err) {
     console.error('GPT Ingredient fetch error:', err);
     gptIngredients.value = [];

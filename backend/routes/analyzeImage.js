@@ -22,16 +22,29 @@ router.post('/', upload.single('image'), async (req, res) => {
             temperature: 0, // Makes responses more deterministic (less creative)
             messages: [
                 {
-                    role: 'user',
-                    content: [
-                        { type: 'text', text: `This is a photo of a meal (possibly ${label}). Please identify all visible individual ingredients. Respond as a clean JSON array: ['Chicken', 'Broccoli', 'Sauce']. Include side dishes or garnishes if visible. Only include ingredients you can clearly see. Don't guess.`},
-                        {
-                            type: 'image_url',
-                            image_url: {
-                                url: `data:image/jpeg;base64,${base64}`,
-                            },
-                        },
-                    ],
+                  role: 'user',
+                  content: [
+                    {
+                      type: 'text',
+                      text: `Look at this image of food. Based on what you see and the (possibly correct) label provided, list the specific food ingredients in this meal.
+              
+                            Only include items that can be searched in a food nutrition database (like USDA FDC).
+                            
+                            Be as specific as possible (e.g. 'grilled chicken breast', not just 'meat' or 'protein').
+                            
+                            Avoid vague terms like 'green vegetables', 'sauce', or 'spices' — instead say what the most likely actual ingredient is.
+                            
+                            If a food has multiple names in American and British English, show both, like: Eggplant (Aubergine) or Cilantro (Coriander)
+                            
+                            Return a JSON array of ingredient names as strings.`
+                    },
+                    {
+                      type: 'image_url',
+                      image_url: {
+                        url: `data:image/jpeg;base64,${base64}`,
+                      },
+                    },
+                  ],
                 },
             ],
             max_tokens: 300,
