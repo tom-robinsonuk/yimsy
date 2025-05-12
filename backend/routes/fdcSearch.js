@@ -4,12 +4,36 @@ import axios from 'axios';
 
 const router = express.Router();
 
+router.post('/fdc-vague-check', async (req, res) => {
+    const { query } = req.body;
+    const apiKey = process.env.FDC_API_KEY;
+  
+    const url = `https://api.nal.usda.gov/fdc/v1/foods/search?query=${encodeURIComponent(query)}&api_key=${apiKey}&pageSize=20&exact=false`;
+  
+    try {
+      const response = await axios.get(url);
+      const foods = response.data.foods || [];
+  
+      const isVague = foods.length >= 10;
+      const descriptions = foods.map(f => f.description);
+  
+      res.json({
+        success: true,
+        vague: isVague,
+        count: foods.length,
+        suggestions: descriptions.slice(0, 5)
+      });
+    } catch (err) {
+      res.status(500).json({ success: false, error: err.message });
+    }
+  });
+
 router.post('/fdc-search', async (req, res) => {
   const { query } = req.body;
   const apiKey = process.env.FDC_API_KEY;
 
   const searchFdc = async (query, exact = false) => {
-    const url = `https://api.nal.usda.gov/fdc/v1/foods/search?query=${encodeURIComponent(query)}&api_key=${apiKey}&pageSize=5&exact=${exact}`;
+    const url = `https://api.nal.usda.gov/fdc/v1/foods/search?query=${encodeURIComponent(query)}&api_key=${apiKey}&pageSize=20&exact=${exact}`;
     const response = await axios.get(url);
     return response.data.foods || [];
   };

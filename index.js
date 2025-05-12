@@ -8,6 +8,7 @@ import { ensureOnnxModel } from './backend/scripts/prepare_model.js';
 import analyzeImageRoute from './backend/routes/analyzeImage.js';
 import fdcSearchRoute from './backend/routes/fdcSearch.js';
 import manualIngredientCheckRoute from './backend/routes/manualIngredientCheck.js';
+import fdcRefineRoute from './backend/routes/fdcRefine.js';
 
 // Call before starting server
 await ensureOnnxModel();
@@ -21,6 +22,7 @@ app.use(express.json());
 // GPT
 app.use('/analyze-image', analyzeImageRoute);
 app.use('/manual-check', manualIngredientCheckRoute);
+app.use('/', fdcRefineRoute);
 
 // Database
 app.use('/', fdcSearchRoute);

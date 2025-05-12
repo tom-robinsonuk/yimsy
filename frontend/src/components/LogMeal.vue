@@ -62,10 +62,18 @@
                       <v-col cols="9">
                         <v-checkbox
                           v-model="selectedIngredients"
-                          :label="editingIndex === index ? '' : ingredient"
-                          :value="ingredient"
+                          :label="editingIndex === index ? '' : ingredient.name"
+                          :value="ingredient.name"
                           hide-details
                         />
+                      <!-- <v-icon
+                          v-if="ingredient.vague"
+                          color="orange"
+                          size="16"
+                          class="ml-1"
+                        >
+                          mdi-alert-circle
+                        </v-icon> -->
                         <v-text-field
                           v-if="editingIndex === index"
                           v-model="editedName"
@@ -178,6 +186,16 @@ const fetchingNutrition = ref(false);
 const editingIndex = ref(null);
 const editedName = ref('');
 
+const checkIngredientVagueness = async (ingredient) => {
+  try {
+    const response = await axios.post('http://localhost:3001/fdc-vague-check', { query: ingredient });
+    return response.data.vague;
+  } catch (error) {
+    console.error(`Error checking vagueness for ${ingredient}:`, error);
+    return false;
+  }
+};
+
 const editIngredient = (index) => {
   editingIndex.value = index;
   editedName.value = gptIngredients.value[index];
@@ -200,6 +218,21 @@ const triggerFilePicker = () => {
   fileInput.value?.click();
 };
 
+const refineIngredientWithFDC = async (ingredient, suggestions = []) => {
+  try {
+    const res = await axios.post('http://localhost:3001/fdc-refine', {
+      label: ingredient,
+      suggestions
+    });
+
+    return res.data?.best || ingredient;
+  } catch (err) {
+    console.warn(`Refine failed for ${ingredient}:`, err.message);
+    return ingredient;
+  }
+};
+
+
 const addManualIngredient = async () => {
   const item = manualIngredient.value.trim();
   if (!item) return;
@@ -208,7 +241,7 @@ const addManualIngredient = async () => {
 
   results.forEach((ingredient) => {
     if (!gptIngredients.value.includes(ingredient)) {
-      gptIngredients.value.push(ingredient);
+      gptIngredients.value.push({ name: item, vague: false });
       selectedIngredients.value.push(ingredient);
     }
   });
@@ -233,36 +266,48 @@ const updateSelectedIngredients = async () => {
   fetchingNutrition.value = true;
   nutritionResults.value = [];
 
-  
   // Clean up: remove any unchecked ingredients
   selectedIngredients.value = selectedIngredients.value.filter(item =>
-    gptIngredients.value.includes(item)
+    gptIngredients.value.some(i => i.name === item)
   );
 
   for (const ingredient of selectedIngredients.value) {
-    try {
-      const res = await axios.post('http://localhost:3001/fdc-search', {
-        query: ingredient
-      });
+  try {
+    // First: Get suggestions from vague check
+    const vagueRes = await axios.post('http://localhost:3001/fdc-vague-check', {
+      query: ingredient
+    });
 
-      if (res.data?.success && res.data.data) {
-        const food = res.data.data;
-        nutritionResults.value.push({
-          label: ingredient,
-          grams: Number(food.grams).toFixed(1),
-          protein: Number(food.protein).toFixed(1),
-          carbs: Number(food.carbs).toFixed(1),
-          fats: Number(food.fats).toFixed(1),
-          kcal: Number(food.kcal).toFixed(0)
-        });
-      }
-    } catch (err) {
-      console.warn(`Failed to get nutrition for ${ingredient}`, err.message);
+    let searchTerm = ingredient;
+
+    // If vague, ask GPT to pick the best one
+    if (vagueRes.data?.vague && Array.isArray(vagueRes.data.suggestions)) {
+      searchTerm = await refineIngredientWithFDC(ingredient, vagueRes.data.suggestions);
     }
-  }
 
+    // Then fetch nutrition data
+    const res = await axios.post('http://localhost:3001/fdc-search', {
+      query: searchTerm
+    });
+
+    if (res.data?.success && res.data.data) {
+      const food = res.data.data;
+      nutritionResults.value.push({
+        label: ingredient, // keep user-friendly name
+        grams: Number(food.grams).toFixed(1),
+        protein: Number(food.protein).toFixed(1),
+        carbs: Number(food.carbs).toFixed(1),
+        fats: Number(food.fats).toFixed(1),
+        kcal: Number(food.kcal).toFixed(0)
+      });
+    }
+  } catch (err) {
+    console.warn(`Failed to get nutrition for ${ingredient}`, err.message);
+  }
+}
   fetchingNutrition.value = false;
 };
+
 
 const confirmLabel = async (isCorrect) => {
   if (isCorrect) {
@@ -313,8 +358,15 @@ const runGptIngredientDetection = async (label) => {
         return;
     }
 
-    gptIngredients.value = Array.isArray(parsed) ? parsed : [];
-    selectedIngredients.value = [...gptIngredients.value];
+    gptIngredients.value = [];
+
+    for (const ingredient of parsed) {
+      const isVague = await checkIngredientVagueness(ingredient);
+      gptIngredients.value.push({ name: ingredient, vague: isVague });
+    }
+
+    selectedIngredients.value = parsed; // still a plain list of strings
+
   } catch (err) {
     console.error('GPT Ingredient fetch error:', err);
     gptIngredients.value = [];
